@@ -404,7 +404,8 @@ def get_ADAPTIVE_exposure(normal_dataset:str, normal_class_indx:int,count:int):
         raise ValueError('Wrong Exposure Address!')
         exit()
 
-    exposure_data = torch.tensor(exposure_data)
+    exposure_data = torch.tensor(((torch.tensor(exposure_data) + 1)*127.5).round().clamp(0, 255), dtype=torch.uint8)
+
 
     if exposure_data.size(0) < count:
         copy_dataset(exposure_data, count)
