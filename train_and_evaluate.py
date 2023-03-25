@@ -20,6 +20,7 @@ from logger import Logger
 
 def run(model, checkpoint_path, train_attack, test_attacks, trainloader, testloader, writer, logger:Logger, test_step:int, save_step:int, max_epochs:int, device, force_restart, loss_threshold=1e-3):
 
+    #import pdb; pdb.set_trace()
     optimizer = torch.optim.SGD(model.parameters(), lr=0.1, momentum=0.9, weight_decay=5e-4)
     criterion = nn.CrossEntropyLoss()
     init_epoch = 0
@@ -29,8 +30,8 @@ def run(model, checkpoint_path, train_attack, test_attacks, trainloader, testloa
     if not force_restart and checkpoint is not None:
         model, optimizer, init_epoch, loss = checkpoint
 
-    vis_batch_train = get_visualization_batch(dataloader=trainloader, n=50)
-    vis_batch_test = get_visualization_batch(dataloader=testloader, n=50)
+    vis_batch_train = get_visualization_batch(dataloader=trainloader, n=1)
+    vis_batch_test = get_visualization_batch(dataloader=testloader, n=1)
 
     writer.add_graph(model, vis_batch_train[0])
     writer.flush()

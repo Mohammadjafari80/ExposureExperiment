@@ -47,21 +47,24 @@ def getMVTecDataset(normal_class_indx, only_anomaly_in_test=False, remove_class_
                 self.data = list(set(self.data) - set(remove_class_files))
 
             self.data.sort(key=lambda y: y.lower())
-            self.data = [Image.open(x).convert('RGB') for x in self.data]
+            self.targets = [ [i for i in range(len(mvtec_labels)) if mvtec_labels[i] in x][0] for x in self.data]
+            self.data_files = self.data
+            self.data = np.array([np.array( Image.open(x).convert('RGB').resize((224, 224)) ) for x in self.data])
             self.train = train
 
         def __getitem__(self, index):
-            image_file = self.data[index]
-            image = image_file
-            if self.transform is not None:
-                image = self.transform(image_file)
+            image = self.data[index]
+            image_path = self.data_files[index]
 
-            if os.path.dirname(image_file).endswith("good"):
+            if self.transform is not None:
+                image = self.transform(image)
+
+            if os.path.dirname(image_path).endswith("good"):
                 target = 0
             else:
                 target = 1
-
-            return image, target
+            
+            return F.to_pil_image(image), target
 
         def __len__(self):
             return len(self.data)

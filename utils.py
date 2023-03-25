@@ -86,6 +86,13 @@ def save_model_checkpoint(model, epoch, loss, path, optimizer):
                 'optimizer_state_dict': optimizer.state_dict(),
                 'loss': loss,
         }, path)
+        if epoch in [15, 20, 25]:
+            torch.save({
+                'epoch': epoch,
+                'model_state_dict': model.state_dict(),
+                'optimizer_state_dict': optimizer.state_dict(),
+                'loss': loss,
+            }, path[:-3]+f"-epoch{epoch}.pt")
     except:
         raise ValueError('Saving model checkpoint failed!')
 

@@ -48,9 +48,26 @@ tansform_32_gray = transforms.Compose([
                                     transforms.ToTensor()
                                 ])
 
-
-
 class GeneralDataset(torch.utils.data.Dataset):
+    def __init__(self, data, targets, transform=None):
+        self.transform = transform
+        self.data = [F.to_pil_image(x).convert('RGB') for x in data]
+        self.targets = targets
+
+    def __getitem__(self, index):
+        image = self.data[index]
+        target = self.targets[index]
+
+        if self.transform is not None:
+            image = self.transform(image)
+
+        return image, target
+
+    def __len__(self):
+        return len(self.data)
+
+
+class GeneralDatasetOODClf(torch.utils.data.Dataset):
     def __init__(self, normal_data, exposure_data, transform=None):
         self.transform = transform
         normal_data = [F.to_pil_image(x).convert('RGB') for x in normal_data]
@@ -88,10 +105,11 @@ def get_dataloader(normal_dataset:str, normal_class_indx:int, exposure_dataset:s
         else:
             transform = tansform_32_gray
 
-    normal_data, testset = get_normal_class(dataset=normal_dataset, normal_class_indx=normal_class_indx, transform=transform)
+    normal_data, test_data, test_targets = get_normal_class(dataset=normal_dataset, normal_class_indx=normal_class_indx, transform=transform)
     exposure_data = get_exposure(dataset=exposure_dataset, normal_dataset=normal_dataset, normal_class_indx=normal_class_indx, count=len(normal_data))
 
-    trainset = GeneralDataset(normal_data=normal_data, exposure_data=exposure_data, transform=transform)
+    trainset = GeneralDatasetOODClf(normal_data=normal_data, exposure_data=exposure_data, transform=transform)
+    testset = GeneralDataset(data=test_data, targets = test_targets, transform=transform)
     del exposure_data, normal_data
 
     train_loader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True, num_workers=2)
@@ -113,7 +131,7 @@ def get_normal_class(dataset='cifar10', normal_class_indx = 0,  transform=None):
         "mnist":MNIST,
         "fashion":FashionMNIST,
         "svhn":SVHN,
-        "mvtec":getMVTecDataset(normal_class_indx, only_anomaly_in_test=False)
+        "mvtec":getMVTecDataset(normal_class_indx=None, only_anomaly_in_test=False)
     }
 
     if dataset in datasets_builders.keys():
@@ -122,12 +140,12 @@ def get_normal_class(dataset='cifar10', normal_class_indx = 0,  transform=None):
             trainset.targets = sparse2coarse(trainset.targets)
         trainset.data = trainset.data[np.array(trainset.targets) == normal_class_indx]
 
-        testset = datasets_builders[dataset](root=dataset_paths[dataset], train=False, download=True, transform=transform)
+        testset = datasets_builders[dataset](root=dataset_paths[dataset], train=False, download=True)
         if dataset == "cifar100":
             testset.targets = sparse2coarse(testset.targets)
         testset.targets  = [int(t!=normal_class_indx) for t in testset.targets]
 
-        return [F.to_tensor(np.array(x).astype(np.uint8)) for x  in trainset.data], testset
+        return [F.to_tensor(np.array(x).astype(np.uint8)) for x  in trainset.data], [F.to_tensor(np.array(x).astype(np.uint8)) for x  in testset.data], testset.targets
     else:
         raise Exception("Dataset is not supported yet. ")
 
