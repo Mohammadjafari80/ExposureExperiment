@@ -48,6 +48,9 @@ class Net(nn.Module):
       raise ValueError('Invalid Model Type!')
 
     self.head = nn.Linear(512, 2)
+    if model == 'resnet18':
+        self.head = nn.Linear(1000, 2)
+    
 
   def forward(self, x):
     x = self.model(x)
