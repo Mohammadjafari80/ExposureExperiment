@@ -19,13 +19,21 @@ def getAdaptiveExposureDataset(normal_dataset, normal_class_indx):
             try:
                 file_paths = glob(os.path.join(ADAPTIVE_PATH, normal_dataset, f'{normal_class_indx}', "*.npy"), recursive=True)
                 for path in file_paths:
-                    self.data += np.load(path).tolist()
+                    self.data += list(np.load(path))
+                new_data = []
+                for x in self.data:
+                    image_file = torch.from_numpy(x)
+                    scaled = ((image_file + 1)*127.5).round().clamp(0,255).to(torch.uint8).cpu()
+                    new_data.append(scaled/255)
+                self.data = new_data    
+                
             except:
                 raise ValueError('Wrong Exposure Address!')
             self.train = train
 
         def __getitem__(self, index):
             image_file = self.data[index]
+            
             image = image_file
             if self.transform is not None:
                 image = self.transform(image_file)
