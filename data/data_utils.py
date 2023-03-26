@@ -1,4 +1,3 @@
-
 from torchvision.datasets import CIFAR10, CIFAR100, MNIST, SVHN, FashionMNIST
 from data.MVTecDataset import getMVTecDataset
 from data.AdaptiveExposureDataset import getAdaptiveExposureDataset
@@ -89,6 +88,7 @@ class GeneralDatasetOODClf(torch.utils.data.Dataset):
 
 def get_dataloader(normal_dataset:str, normal_class_indx:int, exposure_dataset:str, batch_size):
 
+    
     transform = None
 
     is_big: bool = True if normal_dataset in ['mvtec', 'ctscan'] else False
@@ -105,9 +105,10 @@ def get_dataloader(normal_dataset:str, normal_class_indx:int, exposure_dataset:s
         else:
             transform = tansform_32_gray
 
-    normal_data, test_data, test_targets = get_normal_class(dataset=normal_dataset, normal_class_indx=normal_class_indx, transform=transform)
+    normal_data, test_data, test_targets = get_normal_class(dataset=normal_dataset, normal_class_indx=normal_class_indx, transform=transform)    
     exposure_data = get_exposure(dataset=exposure_dataset, normal_dataset=normal_dataset, normal_class_indx=normal_class_indx, count=len(normal_data))
 
+    
     trainset = GeneralDatasetOODClf(normal_data=normal_data, exposure_data=exposure_data, transform=transform)
     testset = GeneralDataset(data=test_data, targets = test_targets, transform=transform)
     del exposure_data, normal_data
@@ -123,8 +124,7 @@ def get_dataloader(normal_dataset:str, normal_class_indx:int, exposure_dataset:s
 #  Normal Datastes #
 ####################
 
-def get_normal_class(dataset='cifar10', normal_class_indx = 0,  transform=None):
-
+def get_normal_class(dataset='cifar10', normal_class_indx = 0,  transform=None):    
     datasets_builders = {
         "cifar10":CIFAR10,
         "cifar100":CIFAR100,
@@ -136,6 +136,7 @@ def get_normal_class(dataset='cifar10', normal_class_indx = 0,  transform=None):
 
     if dataset in datasets_builders.keys():
         trainset = datasets_builders[dataset](root=dataset_paths[dataset], train=True, download=True) #CHECK transform ?
+        
         if dataset == "cifar100":
             trainset.targets = sparse2coarse(trainset.targets)
         trainset.data = trainset.data[np.array(trainset.targets) == normal_class_indx]
@@ -175,7 +176,9 @@ def get_exposure(dataset:str='cifar10', normal_dataset:str='cifar100', normal_cl
 
     if dataset in datasets_builders.keys():
         exposure_train = datasets_builders[dataset](root=dataset_paths[dataset], train=True, download=True) #CHECK transforms ?
+        
         assert len(exposure_train) > 0
+        
         #exposure_test = datasets_builders[dataset](root=dataset_paths[dataset], train=False, download=True) #CHECK transforms ?
         if dataset == "cifar100":
             exposure_train.targets = sparse2coarse(exposure_train.targets)
@@ -184,8 +187,8 @@ def get_exposure(dataset:str='cifar10', normal_dataset:str='cifar100', normal_cl
         if normal_dataset.lower() == dataset:
             exposure_train.data = exposure_train.data[np.array(exposure_train.targets) != normal_class_indx]
             #exposure_test.data = exposure_test.data[np.array(exposure_test.targets) != normal_class_indx]
-
-        exposure_data = torch.tensor(exposure_train.data)
+            
+        exposure_data = torch.stack(exposure_train.data)
         del exposure_train
 
         #if exposure_data.size(0) < count:
@@ -198,7 +201,7 @@ def get_exposure(dataset:str='cifar10', normal_dataset:str='cifar100', normal_cl
         indices = torch.randperm(exposure_data.size(0))[:count]
         exposure_data =  exposure_data[indices]
 
-        return [F.to_tensor(np.array(x).astype(np.uint8)) for x  in exposure_data]
+        return exposure_data
     else:
         raise Exception("Dataset is not supported yet. ")
 
