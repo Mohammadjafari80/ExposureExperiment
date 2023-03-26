@@ -36,3 +36,4 @@ def getAdaptiveExposureDataset(normal_dataset, normal_class_indx):
 
         def __len__(self):
             return len(self.data)
+    return AdaptiveExposureDataset
