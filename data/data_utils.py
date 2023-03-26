@@ -175,6 +175,7 @@ def get_exposure(dataset:str='cifar10', normal_dataset:str='cifar100', normal_cl
 
     if dataset in datasets_builders.keys():
         exposure_train = datasets_builders[dataset](root=dataset_paths[dataset], train=True, download=True) #CHECK transforms ?
+        assert len(exposure_train) > 0
         #exposure_test = datasets_builders[dataset](root=dataset_paths[dataset], train=False, download=True) #CHECK transforms ?
         if dataset == "cifar100":
             exposure_train.targets = sparse2coarse(exposure_train.targets)
