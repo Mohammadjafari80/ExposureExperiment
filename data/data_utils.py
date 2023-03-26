@@ -187,8 +187,12 @@ def get_exposure(dataset:str='cifar10', normal_dataset:str='cifar100', normal_cl
         if normal_dataset.lower() == dataset:
             exposure_train.data = exposure_train.data[np.array(exposure_train.targets) != normal_class_indx]
             #exposure_test.data = exposure_test.data[np.array(exposure_test.targets) != normal_class_indx]
-            
-        exposure_data = torch.stack(exposure_train.data)
+        
+        if dataset == 'adaptive':
+            exposure_data = torch.stack(exposure_train.data)
+        else:
+            exposure_data = torch.tensor(exposure_train.data)
+        
         del exposure_train
 
         #if exposure_data.size(0) < count:
@@ -201,7 +205,10 @@ def get_exposure(dataset:str='cifar10', normal_dataset:str='cifar100', normal_cl
         indices = torch.randperm(exposure_data.size(0))[:count]
         exposure_data =  exposure_data[indices]
 
-        return exposure_data
+        if dataset == 'adaptive':
+            return exposure_data
+        else:
+            return [F.to_tensor(np.array(x).astype(np.uint8)) for x  in exposure_data]
     else:
         raise Exception("Dataset is not supported yet. ")
 
