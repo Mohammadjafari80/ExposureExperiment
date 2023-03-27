@@ -108,6 +108,9 @@ def get_dataloader(normal_dataset:str, normal_class_indx:int, exposure_dataset:s
     normal_data, test_data, test_targets = get_normal_class(dataset=normal_dataset, normal_class_indx=normal_class_indx, transform=transform)    	
     print("Length of Normal Dataset:", len(normal_data))	
     print("Length of Test Dataset:", len(test_data))
+    
+    assert 1 in test_targets and 0 in test_targets
+    
     exposure_data = get_exposure(dataset=exposure_dataset, normal_dataset=normal_dataset, normal_class_indx=normal_class_indx, count=len(normal_data))	
     print("Length of Exposure Dataset:", len(exposure_data))
 
