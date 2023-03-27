@@ -39,18 +39,23 @@ def getMVTecDataset(normal_class_indx, only_anomaly_in_test=False, remove_class_
                     self.data = anomaly_image_files
                 else:
                     self.data = image_files
-
+                    
             if remove_class_indx is not None:
                 remove_class_files = glob(
-                    os.path.join(dataset_dir, self.category, "**", "*.png"), recursive=True
+                    os.path.join(dataset_dir, remove_class_indx, "**", "*.png"), recursive=True
                 )
                 self.data = list(set(self.data) - set(remove_class_files))
 
             self.data.sort(key=lambda y: y.lower())
-            self.targets = [ [i for i in range(len(mvtec_labels)) if mvtec_labels[i] in x][0] for x in self.data]
+            if train:
+                self.targets = [normal_class_indx for x in self.data]
+            else:
+                self.targets = [normal_class_indx if os.path.dirname(x).endswith("good") else 15 for x in self.data]
             self.data_files = self.data
+            
             self.data = np.array([np.array( Image.open(x).convert('RGB').resize((224, 224)) ) for x in self.data])
             self.train = train
+            
 
         def __getitem__(self, index):
             image = self.data[index]
