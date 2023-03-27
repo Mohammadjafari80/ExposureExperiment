@@ -105,8 +105,11 @@ def get_dataloader(normal_dataset:str, normal_class_indx:int, exposure_dataset:s
         else:
             transform = tansform_32_gray
 
-    normal_data, test_data, test_targets = get_normal_class(dataset=normal_dataset, normal_class_indx=normal_class_indx, transform=transform)    
-    exposure_data = get_exposure(dataset=exposure_dataset, normal_dataset=normal_dataset, normal_class_indx=normal_class_indx, count=len(normal_data))
+    normal_data, test_data, test_targets = get_normal_class(dataset=normal_dataset, normal_class_indx=normal_class_indx, transform=transform)    	
+    print("Length of Normal Dataset:", len(normal_data))	
+    print("Length of Test Dataset:", len(test_data))
+    exposure_data = get_exposure(dataset=exposure_dataset, normal_dataset=normal_dataset, normal_class_indx=normal_class_indx, count=len(normal_data))	
+    print("Length of Exposure Dataset:", len(exposure_data))
 
     
     trainset = GeneralDatasetOODClf(normal_data=normal_data, exposure_data=exposure_data, transform=transform)
@@ -130,8 +133,8 @@ def get_normal_class(dataset='cifar10', normal_class_indx = 0,  transform=None):
         "cifar100":CIFAR100,
         "mnist":MNIST,
         "fashion":FashionMNIST,
-        "svhn":SVHN,
-        "mvtec":getMVTecDataset(normal_class_indx=None, only_anomaly_in_test=False)
+        "svhn":SVHN,	
+        "mvtec":getMVTecDataset(normal_class_indx=normal_class_indx, only_anomaly_in_test=False)
     }
 
     if dataset in datasets_builders.keys():
