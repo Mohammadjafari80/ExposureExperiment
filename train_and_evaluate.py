@@ -25,10 +25,10 @@ def run(model, checkpoint_path, train_attack, test_attacks, trainloader, testloa
     criterion = nn.CrossEntropyLoss()
     init_epoch = 0
 
-    checkpoint = load_model_checkpoint(model=model, optimizer=optimizer, path=checkpoint_path)
-
-    if not force_restart and checkpoint is not None:
-        model, optimizer, init_epoch, loss = checkpoint
+    if not force_restart:
+        checkpoint = load_model_checkpoint(model=model, optimizer=optimizer, path=checkpoint_path)
+        if checkpoint:
+            model, optimizer, init_epoch, loss = checkpoint
 
     vis_batch_train = get_visualization_batch(dataloader=trainloader, n=1)
     vis_batch_test = get_visualization_batch(dataloader=testloader, n=1)
