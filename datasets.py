@@ -420,7 +420,8 @@ def get_ADAPTIVE_exposure(normal_dataset:str, normal_class_indx:int,count:int):
     indices = torch.randperm(exposure_data.size(0))[:count]
     exposure_data =  exposure_data[indices]
 
-    return exposure_data
+    return [F.to_tensor(np.array(x)) for x  in exposure_data]
+
 
 
 class MVTecDatasetExposure(torch.utils.data.Dataset):
