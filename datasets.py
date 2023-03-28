@@ -479,13 +479,11 @@ def get_MVTEC_exposure(normal_dataset:str, normal_class_indx:int, count:int):
 class ImageNetExposure(Dataset):
     def __init__(self, root, count, transform=None):
         self.transform = transform
-        image_files = glob(os.path.join(root, "*", "*.JPEG"))
+        image_files = glob(os.path.join(root, "**", "*.JPEG"), recursive=True)
         random.shuffle(image_files)
         final_length = min(len(image_files), count)
         self.image_files = image_files[:final_length]
-
-        self.image_files.sort(key=lambda y: y.lower())
-        self.data = np.array([np.array(Image.open(x).convert('RGB')) for x in self.image_files])
+        self.data = np.array([np.array(Image.open(x).convert('RGB').resize((32, 32))) for x in self.image_files])
 
 def get_IMAGENETC_exposure(count:int):    
     exposure_data = torch.tensor(ImageNetExposure(IMAGENETC_PATH, count).data)
