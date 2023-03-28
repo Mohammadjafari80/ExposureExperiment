@@ -8,11 +8,12 @@ from torch.utils.data import Dataset
 from PIL import Image
 from glob import glob
 from utills import sparse2coarse
-from constants import CIFAR10_PATH, CIFAR100_PATH, MNIST_PATH, FMNIST_PATH, SVHN_PATH, MVTEC_PATH, ADAPTIVE_PATH, mvtec_labels
+from constants import CIFAR10_PATH, CIFAR100_PATH, MNIST_PATH, FMNIST_PATH, SVHN_PATH, MVTEC_PATH, IMAGENETC_PATH, ADAPTIVE_PATH, mvtec_labels
 import torchvision.transforms.functional as F
 import requests
 from PIL import Image
 from tqdm import tqdm
+import random
 
 tansform_224 = transforms.Compose([
                                     transforms.Resize(224),
@@ -58,7 +59,7 @@ class GeneralDataset(torch.utils.data.Dataset):
     def __len__(self):
         return len(self.data)
     
-def get_dataloader(normal_dataset:str, normal_class_indx:int, exposure_dataset:str, batch_size):
+def get_dataloader(normal_dataset:str, normal_class_indx:int, exposure_dataset:str, batch_size, imagenetc=False):
 
     transform = None
 
@@ -78,6 +79,9 @@ def get_dataloader(normal_dataset:str, normal_class_indx:int, exposure_dataset:s
 
     normal_data, testset = get_normal_class(dataset=normal_dataset, normal_class_indx=normal_class_indx, transform=transform)
     exposure_data = get_exposure(dataset=exposure_dataset, normal_dataset=normal_dataset, normal_class_indx=normal_class_indx, count=len(normal_data))
+
+    if imagenetc:
+        exposure_data += get_exposure(dataset='imagenetc', normal_dataset=normal_dataset, normal_class_indx=normal_class_indx, count=len(normal_data))
 
     trainset = GeneralDataset(normal_data=normal_data, exposure_data=exposure_data, transform=transform)
     del exposure_data, normal_data
@@ -256,6 +260,8 @@ def get_exposure(dataset:str='cifar10', normal_dataset:str='cifar100', normal_cl
         return get_MVTEC_exposure(normal_dataset, normal_class_indx, count)
     elif dataset == 'adaptive':
         return get_ADAPTIVE_exposure(normal_dataset, normal_class_indx, count)
+    elif dataset == 'imagenetc':
+        return get_IMAGENETC_exposure(count)
     else:
         raise Exception("Dataset is not supported yet. ")
     
@@ -317,6 +323,7 @@ def get_CIFAR100_exposure(normal_dataset:str, normal_class_indx:int, count:int):
 
 
     return [F.to_tensor(np.array(x).astype(np.uint8)) for x  in exposure_data]
+
 
 
 def get_MNIST_exposure(normal_dataset:str, normal_class_indx:int, count:int):    
@@ -460,6 +467,28 @@ class MVTecDatasetExposure(torch.utils.data.Dataset):
 
 def get_MVTEC_exposure(normal_dataset:str, normal_class_indx:int, count:int):    
     exposure_data = torch.tensor(MVTecDatasetExposure(root=MVTEC_PATH, category=None if normal_dataset!='mvtec' else mvtec_labels[normal_class_indx], download=True).data)
+
+    if exposure_data.size(0) < count:
+        copy_dataset(exposure_data, count)
+
+    indices = torch.randperm(exposure_data.size(0))[:count]
+    exposure_data =  exposure_data[indices]
+
+    return [F.to_tensor(np.array(x).astype(np.uint8)) for x  in exposure_data]
+
+class ImageNetExposure(Dataset):
+    def __init__(self, root, count, transform=None):
+        self.transform = transform
+        image_files = glob(os.path.join(root, "*", "*.JPEG"))
+        random.shuffle(image_files)
+        final_length = min(len(image_files), count)
+        self.image_files = image_files[:final_length]
+
+        self.image_files.sort(key=lambda y: y.lower())
+        self.data = np.array([np.array(Image.open(x).convert('RGB')) for x in self.image_files])
+
+def get_IMAGENETC_exposure(count:int):    
+    exposure_data = torch.tensor(ImageNetExposure(IMAGENETC_PATH, count).data)
 
     if exposure_data.size(0) < count:
         copy_dataset(exposure_data, count)

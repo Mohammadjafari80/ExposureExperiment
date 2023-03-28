@@ -265,7 +265,7 @@ train_attack = PGD(model, eps=attack_eps, alpha=train_alpha, steps=train_steps) 
 #  Dataloaders #
 ################
 
-trainloader, testloader = get_dataloader(normal_dataset=args.source_dataset, normal_class_indx=args.source_class, exposure_dataset=args.exposure_dataset, batch_size=args.batch_size)
+trainloader, testloader = get_dataloader(normal_dataset=args.source_dataset, normal_class_indx=args.source_class, exposure_dataset=args.exposure_dataset, batch_size=args.batch_size, imagenetc=args.imagenetc)
 
 #########################
 #  init checkpoint path #

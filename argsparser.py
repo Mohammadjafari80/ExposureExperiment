@@ -34,6 +34,8 @@ def parse_args():
 
     parser.add_argument("--clean", action="store_true", help="if true normal training else adversarial-training")
 
+    parser.add_argument("--imagenetc", action="store_true", help="if true half of exposure data will be from this")
+
     parser.add_argument("--force_restart", action="store_true", help="if true doesn't use already available checkpoints")
 
     parser.add_argument('--test_step', help='If given x, every x step a test would be performed', default=1, type=int)
