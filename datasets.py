@@ -81,7 +81,7 @@ def get_dataloader(normal_dataset:str, normal_class_indx:int, exposure_dataset:s
     exposure_data = get_exposure(dataset=exposure_dataset, normal_dataset=normal_dataset, normal_class_indx=normal_class_indx, count=len(normal_data))
 
     if imagenetc:
-        exposure_data = exposure_data.tolist() + get_exposure(dataset='imagenetc', normal_dataset=normal_dataset, normal_class_indx=normal_class_indx, count=len(normal_data))
+        exposure_data += get_exposure(dataset='imagenetc', normal_dataset=normal_dataset, normal_class_indx=normal_class_indx, count=len(normal_data))
 
     trainset = GeneralDataset(normal_data=normal_data, exposure_data=exposure_data, transform=transform)
     del exposure_data, normal_data
@@ -420,7 +420,7 @@ def get_ADAPTIVE_exposure(normal_dataset:str, normal_class_indx:int,count:int):
     indices = torch.randperm(exposure_data.size(0))[:count]
     exposure_data =  exposure_data[indices]
 
-    return exposure_data
+    return [F.to_tensor(np.array(exposure_data[0]).astype(np.uint8).transpose(1, 2, 0)) for i  in range(exposure_data.size(0))]
 
 
 class MVTecDatasetExposure(torch.utils.data.Dataset):
